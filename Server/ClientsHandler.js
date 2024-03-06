@@ -63,7 +63,7 @@ function on_request(data, socket) {
     let imageData = fs.readFileSync(image_name);   
 
     ITPpacket.init(version, 1, singleton.getSequenceNumber(), singleton.getTimestamp(), imageData );
-    socket.write(ITPpacket.getBytePacket()); 
+    socket.write(ITPpacket.getPacket()); 
 
     socket.end();
   } else {
