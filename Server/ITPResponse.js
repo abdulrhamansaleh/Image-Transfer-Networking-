@@ -19,6 +19,7 @@ module.exports = {
     }
   },
 
+  /* getPacket: returns packet including payload and header information  */
   getPacket: function () {
     const packet = new Buffer.alloc(this.payload.length + this.header_size);
 

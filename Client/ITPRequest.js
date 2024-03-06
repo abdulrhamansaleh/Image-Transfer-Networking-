@@ -1,22 +1,27 @@
 module.exports = {
+  // initial vars
   header: "",
   payload: "",
   header_size: 12,
 
   init: function (version, image_name, time_stamp) {
-    this.header = new Buffer.alloc(this.header_size);
+    this.header = new Buffer.alloc(this.header_size); // initial header
 
-    const extensions = { BMP: 1, JPEG: 2, GIF: 3, PNG: 4, TIFF: 5, RAW: 15 };
+    const extensions = { BMP: 1, JPEG: 2, GIF: 3, PNG: 4, TIFF: 5, RAW: 15 }; // map to decode file extension by number
 
+    // get image 
     image = stringToBytes(image_name.split(".")[0]);
+    // get extenstion
     image_extension = extensions[image_name.split(".")[1].toUpperCase()]
 
+    // build packet 
     storeBitPacket(this.header, version * 1, 0, 4);
     storeBitPacket(this.header, 0, 24, 8);
     storeBitPacket(this.header, time_stamp, 32, 32);
     storeBitPacket(this.header, image_extension, 64, 4);
     storeBitPacket(this.header, image.length, 68, 28);
 
+    // update payload based on image
     this.payload = new Buffer.alloc(image.length);
 
     for (j = 0; j < image.length; j++) {
@@ -24,6 +29,7 @@ module.exports = {
     }
   },
   
+  /* getPacket: returns packet including payload and header information  */
   getPacket: function () {
     const packet = new Buffer.alloc(this.payload.length + this.header_size);
 

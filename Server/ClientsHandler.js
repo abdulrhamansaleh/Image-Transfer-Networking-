@@ -2,18 +2,21 @@ const ITPpacket = require('./ITPResponse');
 const singleton = require('./Singleton');
 const fs = require("fs");
 
+// hash maps to differentiate client details 
 var client_names = {}, addresses = {}, time_stamps = {};
 
+/* client_name: function to assign client name for each client connection */
 function client_name(socket, client_names) {
-  socket.id = socket.remoteAddress + ":" + socket.remotePort;
-  time_stamps[socket.id] = singleton.getTimestamp();
-  var name = "Client-" + time_stamps[socket.id];
-  client_names[socket.id] = name;
-  addresses[socket.id] = socket.remoteAddress;
+  socket.id = socket.remoteAddress + ":" + socket.remotePort; // socket id (identifier for client) based on connection address and port 
+  time_stamps[socket.id] = singleton.getTimestamp(); // set the time stamp for the current client
+  var name = "Client-" + time_stamps[socket.id]; // build CLI display name 
+  client_names[socket.id] = name; // store name in hashmap for current client
+  addresses[socket.id] = socket.remoteAddress; // store address in hash map for current client
 }
 
 
 module.exports = {
+  /* handleClientJoining: server controller for client requests and event handling*/
   handleClientJoining: function (socket) {
     socket.on("data", function (packet) {
       on_request(packet, socket); 
@@ -32,18 +35,21 @@ function on_request(data, socket) {
   console.log("\nITP packet received:");
   printPacketBit(data);
 
+  // parse packet data
   let version = parseBitPacket(data, 0, 4);
   let request_type = parseBitPacket(data, 24, 8);
   let name_length = parseBitPacket(data, 68, 28);
   let image_type = parseBitPacket(data, 64, 4);
   let time = parseBitPacket(data, 32, 32);
 
+  // hashmap to decode request type and image extension
   const types = { 0: "Query", 1: "Found", 2: "Not found", 3: "Busy" };
   const extensions = { 1: "BMP", 2: "JPEG", 3: "GIF", 4: "PNG", 5: "TIFF", 15: "RAW" };
   image_type = extensions[image_type];
 
   let image = bytesToString(data.slice(12, 13 + name_length));
  
+  // CLI display
   console.log("\n" + client_names[socket.id] + " requests:" +
       "\n    --ITP version: " +
       version +
@@ -58,16 +64,17 @@ function on_request(data, socket) {
       "\n"
   );
 
-  if (version == 9) { 
+  // version check to ignore requests that are not being considered 
+  if (version == 9 && request_type == "") { 
     let image_name = "images/" + image + "." + image_type;
     let imageData = fs.readFileSync(image_name);   
 
-    ITPpacket.init(version, 1, singleton.getSequenceNumber(), singleton.getTimestamp(), imageData );
-    socket.write(ITPpacket.getPacket()); 
+    ITPpacket.init(version, 1, singleton.getSequenceNumber(), singleton.getTimestamp(), imageData ); // build packet
+    socket.write(ITPpacket.getPacket()); // send data to client for display 
 
     socket.end();
   } else {
-    console.log("Protocol Version Must be 9 - Requirement");
+    console.log("Protocol Version Must be 9 - Requirement"); // let client know why the request was ignored 
 
     socket.end();
   }
