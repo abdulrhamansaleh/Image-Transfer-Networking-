@@ -16,7 +16,7 @@ request_packet.init(process.argv[7], image_name, singleton.getTimestamp());
 let client = new net.Socket();
 client.connect(port, host, function () {
   console.log("Connected to ImageDB server on: " + host + ":" + port);
-  client.write(request_packet.getBytePacket());
+  client.write(request_packet.getPacket());
 });
 
 /* Reading From Server */

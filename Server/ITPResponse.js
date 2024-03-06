@@ -19,7 +19,7 @@ module.exports = {
     }
   },
 
-  getBytePacket: function () {
+  getPacket: function () {
     const packet = new Buffer.alloc(this.payload.length + this.header_size);
 
     for (var i = 0; i < this.header_size; i++) {
